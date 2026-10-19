@@ -20,11 +20,14 @@ export class Visualizer {
     this.program = null;
     this.uniforms = {};
     this.dustEngine = null;
+    this.traverseEnabled = false;
+    this.traverseAmount = 0;
+    this.traverseClock = 0;
+    this.motionEnergy = 0;
+    this.motionBass = 0;
 
     // Visual configuration parameters
     this.currentPalette = PALETTES.hearth;
-    this.currentMode = 'sanctuary';
-    this.modeValues = { sanctuary: 0, aurora: 1, pulse: 2, spectrum: 3 };
     this.config = {
       emberIntensity: 1.0,
       ribbonSpeed: 1.0,
@@ -109,10 +112,9 @@ export class Visualizer {
 
     // Cache uniform locations
     const uniformNames = [
-      'u_resolution', 'u_time',
+      'u_resolution', 'u_time', 'u_camera',
       'u_subBass', 'u_bass', 'u_lowMid', 'u_mid', 'u_highMid', 'u_treble', 'u_energy',
       'u_emberIntensity', 'u_ribbonSpeed', 'u_grainAmount',
-      'u_visualMode',
       'u_colBg', 'u_colEmberCore', 'u_colEmberGlow',
       'u_colRibbonPrimary', 'u_colRibbonSecondary', 'u_colSunbeam'
     ];
@@ -167,12 +169,6 @@ export class Visualizer {
     return null;
   }
 
-  setMode(mode) {
-    if (Object.prototype.hasOwnProperty.call(this.modeValues, mode)) {
-      this.currentMode = mode;
-    }
-  }
-
   updatePaletteUniforms() {
     if (!this.gl || !this.program) return;
     const gl = this.gl;
@@ -197,11 +193,37 @@ export class Visualizer {
     }
   }
 
+  setTraverseEnabled(enabled) {
+    this.traverseEnabled = Boolean(enabled);
+  }
+
   render(audioData) {
     const now = performance.now();
     const elapsedTime = (now - this.startTime) * 0.001;
     const deltaTime = (now - this.lastFrameTime) * 0.001;
     this.lastFrameTime = now;
+    const motionDelta = Math.min(Math.max(deltaTime, 0), 0.05);
+    const smoothFactor = 1 - Math.exp(-motionDelta * 2.4);
+    this.traverseAmount += ((this.traverseEnabled ? 1 : 0) - this.traverseAmount)
+      * (1 - Math.exp(-motionDelta * 1.8));
+    this.motionEnergy += ((audioData?.energy || 0) - this.motionEnergy) * smoothFactor;
+    this.motionBass += ((audioData?.bass || 0) - this.motionBass) * smoothFactor;
+    if (this.traverseEnabled) {
+      const wanderingTempo = 0.24 + 0.1 * Math.sin(this.traverseClock * 0.075 + 0.9)
+        + this.motionEnergy * 0.72 + this.motionBass * 0.26;
+      this.traverseClock += motionDelta * wanderingTempo;
+    }
+
+    const travel = this.traverseClock;
+    const cameraX = 0.09 * Math.sin(travel * 0.34 + Math.sin(travel * 0.071) * 1.4)
+      + 0.035 * Math.sin(travel * 0.73 + 1.7);
+    const cameraY = 0.075 * Math.sin(travel * 0.28 + 2.1 + Math.sin(travel * 0.083) * 1.2)
+      + 0.028 * Math.sin(travel * 0.59);
+    const cameraZoom = 1.27 + 0.04 * Math.sin(travel * 0.22)
+      + this.motionBass * 0.06;
+    const cameraTurn = 0.032 * Math.sin(travel * 0.18 + 0.8)
+      + 0.018 * Math.sin(travel * 0.43);
+    const cameraBlend = this.traverseAmount;
 
     // --- 1. Render WebGL Fluid Canvas ---
     if (this.gl && this.program) {
@@ -211,6 +233,13 @@ export class Visualizer {
       // Resolution & Time
       gl.uniform2f(this.uniforms.u_resolution, this.glCanvas.width, this.glCanvas.height);
       gl.uniform1f(this.uniforms.u_time, elapsedTime);
+      gl.uniform4f(
+        this.uniforms.u_camera,
+        cameraX * cameraBlend,
+        cameraY * cameraBlend,
+        1 + (cameraZoom - 1) * cameraBlend,
+        cameraTurn * cameraBlend
+      );
 
       // Audio Frequency Bands
       if (audioData) {
@@ -235,7 +264,6 @@ export class Visualizer {
       gl.uniform1f(this.uniforms.u_emberIntensity, this.config.emberIntensity);
       gl.uniform1f(this.uniforms.u_ribbonSpeed, this.config.ribbonSpeed);
       gl.uniform1f(this.uniforms.u_grainAmount, this.config.grainAmount);
-      gl.uniform1f(this.uniforms.u_visualMode, this.modeValues[this.currentMode]);
 
       // Draw Quad
       gl.drawArrays(gl.TRIANGLES, 0, 6);

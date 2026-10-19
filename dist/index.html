@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GR8-VIZ — Cozy Lo-Fi Music Visualizer & Ambient Sanctuary</title>
+  <meta name="description" content="GR8-VIZ: A full-screen, highly aesthetic, cozy digital music visualizer interface featuring asymmetrical glowing ambient light forms and organic fluid gradients. Looks gr8, sounds gr8." />
+  
+  <!-- gr8 (Great Vibes) Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" href="/favicon.svg" />
+  
+  <!-- Modern Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script type="module" crossorigin src="/assets/index-BG-pQysB.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CbNSO_rd.css">
+</head>
+<body>
+  <!-- Edge-to-Edge Canvas Viewport -->
+  <div id="viewport">
+    <canvas id="glCanvas"></canvas>
+    <canvas id="particleCanvas"></canvas>
+  </div>
+
+  <!-- Cinematic Film Vignette Overlay -->
+  <div class="cinema-vignette"></div>
+
+  <!-- Flush Glassmorphic UI Overlay -->
+  <div class="ui-overlay" id="uiOverlay">
+    <!-- Top Bar: Track Info (Top-Left) & Quick Controls (Top-Right) -->
+    <header class="top-bar">
+      <!-- Floating Ultra-Minimalist Track Information (Top-Left Corner) -->
+      <div class="track-card glass-panel" id="trackCard">
+        <div class="track-main-row">
+          <div class="track-artwork-thumb" id="trackArtworkThumb" style="display: none;">
+            <img id="trackArtworkImg" src="" alt="Album Artwork" />
+            <div class="track-artwork-glow" id="trackArtworkGlow"></div>
+          </div>
+          <div class="track-info-col">
+            <div class="track-badge-row">
+              <div class="pulse-indicator" id="pulseIndicator"></div>
+              <span class="track-badge" id="trackBadge">GR8 SANCTUARY</span>
+            </div>
+            <h1 class="track-title" id="trackTitle">Midnight Rain & Warm Tea</h1>
+            <div class="track-meta" id="trackMeta">Komorebi Soundscapes • Tape 01</div>
+          </div>
+        </div>
+
+        <!-- Audio Source Selector Pills -->
+        <div class="source-pills">
+          <button class="source-pill active" id="sourceSynthBtn" title="Play curated lo-fi sanctuary tapes">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            Sound Library
+          </button>
+          <button class="source-pill sync-pill" id="sourceSyncBtn" title="Capture audio from a browser tab or supported system source">
+            <span class="pill-dot-pulse"></span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h5l3 8 4-16 3 8h5"></path></svg>
+            Capture Audio
+          </button>
+          <button class="source-pill" id="sourceFileBtn" title="Upload and visualize your own audio file">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Audio File
+          </button>
+          <button class="source-pill" id="sourceMicBtn" title="Listen live to microphone or speaker feed">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+            Microphone
+          </button>
+        </div>
+        <input type="file" id="audioFileInput" accept="audio/*" />
+      </div>
+
+      <!-- Quick Action Buttons (Top-Right Corner) -->
+      <nav class="quick-controls" aria-label="Visual controls">
+        <button class="icon-btn" id="btnOpenSync" title="Audio capture settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h5l3 8 4-16 3 8h5"></path></svg>
+        </button>
+        <button class="icon-btn" id="btnSettings" title="Visual controls & color themes (Press 'S')">
+          <svg viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+        </button>
+        <button class="icon-btn" id="btnCinemaMode" title="Hide UI for pure visual immersion (Press 'H')">
+          <svg viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+        <button class="icon-btn" id="btnFullscreen" title="Toggle Fullscreen (Press 'F')">
+          <svg viewBox="0 0 24 24" id="fullscreenIcon"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+        </button>
+      </nav>
+    </header>
+
+    <!-- Bottom Edge: Ultra-Sleek Faint Glassmorphic Scrubber Bar -->
+    <footer class="bottom-bar">
+      <div class="scrubber-bar glass-panel" id="scrubberBar">
+        <!-- Playback Controls -->
+        <div class="playback-controls">
+          <button class="skip-btn" id="btnPrev" title="Previous tape">
+            <svg viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+          </button>
+          <button class="play-pause-btn" id="btnPlayPause" title="Play / Pause (Space)">
+            <svg viewBox="0 0 24 24" id="playPauseIcon"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          </button>
+          <button class="skip-btn" id="btnNext" title="Next tape (N)">
+            <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+          </button>
+        </div>
+
+        <!-- Scrubber Progress Track -->
+        <div class="scrubber-timeline">
+          <span class="time-label current" id="timeCurrent">00:00</span>
+          <div class="progress-track" id="progressTrack">
+            <div class="progress-rail">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-thumb" id="progressThumb"></div>
+          </div>
+          <span class="time-label" id="timeDuration">03:00</span>
+        </div>
+
+        <!-- Aux Controls: Rain, Vinyl, Master Volume -->
+        <div class="aux-controls">
+          <button class="ambient-toggle active" id="btnToggleRain" title="Toggle gentle rain whisper">
+            <svg viewBox="0 0 24 24"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M16 14v6"></path><path d="M8 14v6"></path><path d="M12 16v6"></path></svg>
+            Rain
+          </button>
+          <button class="ambient-toggle active" id="btnToggleVinyl" title="Toggle warm vinyl crackle">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line></svg>
+            Vinyl
+          </button>
+          <div class="volume-wrapper">
+            <button class="volume-btn" id="btnMute" title="Toggle Mute (M)">
+              <svg viewBox="0 0 24 24" id="volumeIcon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+            </button>
+            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="0.85" title="Master volume" />
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Slide-in Visual Settings Drawer -->
+  <aside class="settings-drawer glass-panel" id="settingsDrawer">
+    <div class="drawer-header">
+      <span class="drawer-title">Visual Studio</span>
+      <button class="drawer-close" id="btnCloseSettings">✕</button>
+    </div>
+
+    <!-- Color Palettes -->
+    <div>
+      <div class="section-label">Visualizer Style</div>
+      <div class="visual-mode-grid" role="group" aria-label="Visualizer style">
+        <button class="visual-mode-chip active" data-mode="sanctuary" aria-pressed="true">
+          <span class="mode-art mode-art-sanctuary" aria-hidden="true"></span><span class="mode-copy"><strong>Sanctuary</strong><small>Organic ambient</small></span>
+        </button>
+        <button class="visual-mode-chip" data-mode="aurora" aria-pressed="false">
+          <span class="mode-art mode-art-aurora" aria-hidden="true"></span><span class="mode-copy"><strong>Aurora</strong><small>Slow flowing light</small></span>
+        </button>
+        <button class="visual-mode-chip" data-mode="pulse" aria-pressed="false">
+          <span class="mode-art mode-art-pulse" aria-hidden="true"></span><span class="mode-copy"><strong>Pulse</strong><small>Radial sound waves</small></span>
+        </button>
+        <button class="visual-mode-chip" data-mode="spectrum" aria-pressed="false">
+          <span class="mode-art mode-art-spectrum" aria-hidden="true"></span><span class="mode-copy"><strong>Spectrum</strong><small>Seven band display</small></span>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Color Sanctuary</div>
+      <div class="palette-grid">
+        <button class="palette-chip active" data-palette="hearth">
+          <span class="palette-dot" style="background: #f39c56; box-shadow: 0 0 8px rgba(243, 156, 86, 0.6);"></span>
+          Warm Hearth
+        </button>
+        <button class="palette-chip" data-palette="ochre">
+          <span class="palette-dot" style="background: #f7b731; box-shadow: 0 0 8px rgba(247, 183, 49, 0.6);"></span>
+          Midnight Ochre
+        </button>
+        <button class="palette-chip" data-palette="sakura">
+          <span class="palette-dot" style="background: #e07a9e; box-shadow: 0 0 8px rgba(224, 122, 158, 0.6);"></span>
+          Sakura Reverie
+        </button>
+        <button class="palette-chip" data-palette="nordic">
+          <span class="palette-dot" style="background: #4ecdc4; box-shadow: 0 0 8px rgba(78, 205, 196, 0.6);"></span>
+          Nordic Pine
+        </button>
+      </div>
+    </div>
+
+    <!-- Sliders -->
+    <div class="slider-group">
+      <div class="slider-label-row">
+        <span>Bass Ember Glow (Lower Left)</span>
+        <span id="labelEmberVal">100%</span>
+      </div>
+      <input type="range" class="custom-range" id="sliderEmber" min="0.3" max="2.0" step="0.05" value="1.0" />
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label-row">
+        <span>Mid-range Ribbon Flow</span>
+        <span id="labelRibbonVal">100%</span>
+      </div>
+      <input type="range" class="custom-range" id="sliderRibbon" min="0.4" max="2.2" step="0.05" value="1.0" />
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label-row">
+        <span>Treble Dust Sparkle (Top Right)</span>
+        <span id="labelSparkleVal">100%</span>
+      </div>
+      <input type="range" class="custom-range" id="sliderSparkle" min="0.3" max="2.5" step="0.05" value="1.0" />
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label-row">
+        <span>Dust Mote Density</span>
+        <span id="labelMoteDensity">100%</span>
+      </div>
+      <input type="range" class="custom-range" id="sliderMoteDensity" min="0.2" max="1.5" step="0.05" value="1.0" />
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label-row">
+        <span>Analog Film Grain</span>
+        <span id="labelGrainVal">100%</span>
+      </div>
+      <input type="range" class="custom-range" id="sliderGrain" min="0.0" max="2.0" step="0.05" value="1.0" />
+    </div>
+
+    <!-- Hotkeys hint -->
+    <div class="hotkey-hint">
+      <span><kbd>Space</kbd> Play</span>
+      <span><kbd>F</kbd> Fullscreen</span>
+      <span><kbd>H</kbd> Pure Visual</span>
+      <span><kbd>N</kbd> Next</span>
+    </div>
+  </aside>
+
+  <!-- Audio Capture Modal -->
+  <div class="sync-modal-backdrop" id="syncModal">
+    <div class="sync-modal-dialog glass-panel">
+      <!-- Modal Header -->
+      <div class="sync-modal-header">
+        <div class="sync-brand-icons">
+          <span class="sync-hub-tag">INPUT SOURCE</span>
+          <span class="sync-modal-title">Capture audio</span>
+        </div>
+        <button class="drawer-close" id="btnCloseSyncModal" title="Close (Esc)">✕</button>
+      </div>
+
+      <!-- Active Stream Status Banner (shown when connected) -->
+      <div class="sync-status-card" id="syncStatusCard" style="display: none;">
+        <div class="sync-status-info">
+          <div class="sync-pulse-active">
+            <span class="sync-wave-bar"></span>
+            <span class="sync-wave-bar"></span>
+            <span class="sync-wave-bar"></span>
+            <span class="sync-wave-bar"></span>
+          </div>
+          <div class="sync-status-details">
+            <div class="sync-status-title">Audio input connected</div>
+            <div class="sync-status-sub">The visualizer is analyzing audio from the source you selected</div>
+          </div>
+        </div>
+        <button class="btn-disconnect-sync" id="btnDisconnectSync">Disconnect Feed</button>
+      </div>
+
+      <!-- Main Launch Section -->
+      <div class="sync-action-section">
+        <div class="sync-start-banner">
+          <button class="btn-launch-sync" id="btnStartAudioSync">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span id="btnStartAudioSyncText">Capture Audio</span>
+          </button>
+          <p class="sync-subtitle">This uses your browser’s audio-capture permission. It does not sign in to or connect a Spotify or Apple Music account.</p>
+        </div>
+
+        <!-- Visual Step Cards -->
+        <div class="sync-guide-grid">
+          <div class="sync-guide-card">
+            <div class="sync-guide-header">
+              <span class="guide-num">1</span>
+              <span class="guide-title">Music in a browser tab</span>
+            </div>
+            <p class="guide-desc">Play music in a browser tab, choose <strong>Capture Audio</strong>, then select that tab and enable its audio option. The browser asks you to choose a tab; this site does not connect to the service account.</p>
+            <div class="guide-actions">
+              <a href="https://open.spotify.com" target="_blank" rel="noopener noreferrer" class="link-btn spotify-link">
+                Open Spotify Web
+              </a>
+              <a href="https://music.apple.com" target="_blank" rel="noopener noreferrer" class="link-btn apple-link">
+                Open Apple Music Web
+              </a>
+            </div>
+          </div>
+
+          <div class="sync-guide-card">
+            <div class="sync-guide-header">
+              <span class="guide-num">2</span>
+              <span class="guide-title">Music in a desktop app</span>
+            </div>
+            <p class="guide-desc">Browser support varies. If system audio capture is available, select the offered screen or window and enable audio. You can also use a local audio file or microphone input.</p>
+            <div class="guide-badge">Audio capture only • No account sign-in</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reactivity & Input Sensitivity Boost Slider -->
+      <div class="sync-gain-section">
+        <div class="slider-label-row">
+          <span>Audio Reactivity & Sensitivity Boost</span>
+          <span id="labelSyncGainVal">160%</span>
+        </div>
+        <input type="range" class="custom-range" id="sliderSyncGain" min="0.5" max="3.5" step="0.1" value="1.6" />
+        <div class="sync-gain-meter-container" title="Live audio input energy level">
+          <div class="sync-gain-meter-fill" id="syncGainMeterFill"></div>
+        </div>
+      </div>
+
+      <!-- Now Playing Album Artwork & Metadata Search -->
+      <div class="sync-meta-section">
+        <div class="section-label">Find track artwork</div>
+        <div class="sync-search-row">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="syncSearchInput" placeholder="Search the Apple Music catalog by track or artist" />
+            <button class="clear-search-btn" id="btnClearSyncSearch" style="display: none;">✕</button>
+          </div>
+        </div>
+        <div class="sync-search-results" id="syncSearchResults"></div>
+
+        <!-- Curated Stations -->
+        <div class="preset-stations-label">Curated listening moods</div>
+        <div class="preset-station-chips">
+          <button class="station-chip" data-title="Lofi Hip Hop Radio" data-artist="Lofi Girl" data-art="https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=300&auto=format&fit=crop&q=80" data-palette="hearth">
+            ☕ Lofi Girl (Beats to Study)
+          </button>
+          <button class="station-chip" data-title="Chillhop Essentials" data-artist="Chillhop Music" data-art="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&auto=format&fit=crop&q=80" data-palette="ochre">
+            🍂 Chillhop Essentials
+          </button>
+          <button class="station-chip" data-title="Sakura Reverie Lo-Fi" data-artist="Komorebi Dreams" data-art="https://images.unsplash.com/photo-1528164344705-475426879c0d?w=300&auto=format&fit=crop&q=80" data-palette="sakura">
+            🌸 Sakura Garden Lo-Fi
+          </button>
+          <button class="station-chip" data-title="Nordic Pine Forest" data-artist="Fjord Soundscapes" data-art="https://images.unsplash.com/photo-1448375240586-882707db888b?w=300&auto=format&fit=crop&q=80" data-palette="nordic">
+            🌲 Nordic Pine Forest
+          </button>
+          <button class="station-chip" data-title="Midnight Jazz Lounge" data-artist="Analog Velvet" data-art="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80" data-palette="hearth">
+            🌙 Midnight Jazz Lounge
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Initial Audio Unlock / Welcome Overlay -->
+  <div class="welcome-overlay" id="welcomeOverlay">
+    <div class="welcome-card glass-panel">
+      <div class="welcome-ember-icon"></div>
+      <h2 class="welcome-title">Lo-Fi Ambient Sanctuary</h2>
+      <p class="welcome-desc">
+        An edge-to-edge organic visualizer powered by sound frequencies.
+        Deep bass breathes warm ember glows in the lower-left, mid-tones drift as diagonal silk ribbons,
+        and high-treble notes sparkle into floating dust motes through sunlight.
+      </p>
+      <div class="welcome-cta">Click anywhere or press Space to enter</div>
+    </div>
+  </div>
+
+  <!-- Drag and drop overlay -->
+  <div class="drop-zone-overlay" id="dropZone">
+    <svg class="drop-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+    <div class="drop-text">Drop your audio file to play in the sanctuary</div>
+  </div>
+
+</body>
+</html>

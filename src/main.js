@@ -66,10 +66,10 @@ const btnCloseSettings = document.getElementById('btnCloseSettings');
 const btnCinemaMode = document.getElementById('btnCinemaMode');
 const btnFullscreen = document.getElementById('btnFullscreen');
 const fullscreenIcon = document.getElementById('fullscreenIcon');
+const btnSanctuaryTraverse = document.getElementById('btnSanctuaryTraverse');
 
 // Settings controls
 const paletteChips = document.querySelectorAll('.palette-chip');
-const visualModeChips = document.querySelectorAll('.visual-mode-chip');
 const sliderEmber = document.getElementById('sliderEmber');
 const sliderRibbon = document.getElementById('sliderRibbon');
 const sliderSparkle = document.getElementById('sliderSparkle');
@@ -212,20 +212,27 @@ function handleSeek(e) {
   audio.seek(normalized);
 }
 
-progressTrack.addEventListener('mousedown', (e) => {
+progressTrack.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0) return;
+  e.preventDefault();
   isDraggingScrubber = true;
+  progressTrack.setPointerCapture(e.pointerId);
+  progressTrack.classList.add('dragging');
   handleSeek(e);
 });
 
-window.addEventListener('mousemove', (e) => {
-  if (isDraggingScrubber) {
-    handleSeek(e);
-  }
+progressTrack.addEventListener('pointermove', (e) => {
+  if (isDraggingScrubber) handleSeek(e);
 });
 
-window.addEventListener('mouseup', () => {
+function stopScrubberDrag() {
   isDraggingScrubber = false;
-});
+  progressTrack.classList.remove('dragging');
+}
+
+progressTrack.addEventListener('pointerup', stopScrubberDrag);
+progressTrack.addEventListener('pointercancel', stopScrubberDrag);
+progressTrack.addEventListener('lostpointercapture', stopScrubberDrag);
 
 // Helper: Set Active Source Pill
 function setActiveSourcePill(mode) {
@@ -533,16 +540,12 @@ paletteChips.forEach((chip) => {
   });
 });
 
-visualModeChips.forEach((chip) => {
-  chip.addEventListener('click', () => {
-    const mode = chip.getAttribute('data-mode');
-    visualizer.setMode(mode);
-    visualModeChips.forEach((item) => {
-      const selected = item === chip;
-      item.classList.toggle('active', selected);
-      item.setAttribute('aria-pressed', String(selected));
-    });
-  });
+btnSanctuaryTraverse.addEventListener('click', () => {
+  const enabled = btnSanctuaryTraverse.getAttribute('aria-pressed') !== 'true';
+  btnSanctuaryTraverse.setAttribute('aria-pressed', String(enabled));
+  btnSanctuaryTraverse.classList.toggle('active', enabled);
+  btnSanctuaryTraverse.querySelector('.traverse-toggle-state').textContent = enabled ? 'ON' : 'OFF';
+  visualizer.setTraverseEnabled(enabled);
 });
 
 // Visual Tuning Sliders
