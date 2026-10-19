@@ -40,6 +40,7 @@ export const fragmentShaderSource = `
   uniform float u_emberIntensity;
   uniform float u_ribbonSpeed;
   uniform float u_grainAmount;
+  uniform float u_visualMode;
 
   // Active color palette
   uniform vec3 u_colBg;
@@ -109,6 +110,57 @@ export const fragmentShaderSource = `
     // Aspect ratio corrected coordinate
     vec2 uv = v_uv;
     vec2 aspectUv = (uv - 0.5) * vec2(u_resolution.x / u_resolution.y, 1.0) + 0.5;
+
+    // Alternate visual styles share the active palette and live audio analysis.
+    if (u_visualMode > 0.5 && u_visualMode < 1.5) {
+      vec2 auroraUv = aspectUv;
+      float drift = u_time * 0.12 * u_ribbonSpeed;
+      float warp = fbm(vec2(auroraUv.x * 2.1, auroraUv.y * 1.7 - drift));
+      float curtainA = sin(auroraUv.x * 7.0 + warp * 2.4 - drift * 2.0);
+      float curtainB = sin(auroraUv.x * 11.0 - warp * 1.8 + drift * 1.4);
+      float aurora = exp(-abs(auroraUv.y - 0.56 - curtainA * 0.16) * 5.0);
+      aurora += exp(-abs(auroraUv.y - 0.66 - curtainB * 0.12) * 7.0) * 0.7;
+      float shimmer = 0.72 + 0.28 * sin(auroraUv.x * 18.0 + u_time * 0.8 + warp * 4.0);
+      vec3 color = u_colBg + mix(u_colRibbonSecondary, u_colRibbonPrimary, clamp(auroraUv.x + warp * 0.25, 0.0, 1.0))
+        * aurora * shimmer * (0.28 + u_energy * 0.9);
+      color += u_colSunbeam * pow(max(0.0, auroraUv.y - 0.78), 2.0) * 0.35;
+      gl_FragColor = vec4(color, 1.0);
+      return;
+    }
+
+    if (u_visualMode > 1.5 && u_visualMode < 2.5) {
+      vec2 pulseUv = (uv - 0.5) * vec2(u_resolution.x / u_resolution.y, 1.0);
+      float radius = length(pulseUv);
+      float beat = u_time * (1.3 + u_bass * 2.0);
+      float ring = pow(0.5 + 0.5 * cos(radius * 42.0 - beat * 2.0), 12.0);
+      float halo = exp(-radius * (4.0 - u_energy * 1.2));
+      vec3 color = u_colBg + u_colEmberGlow * halo * (0.35 + u_energy * 0.8);
+      color += u_colRibbonPrimary * ring * (0.18 + u_energy * 0.9);
+      color += u_colEmberCore * exp(-abs(radius - (0.16 + u_bass * 0.12)) * 28.0) * (0.25 + u_bass);
+      gl_FragColor = vec4(color, 1.0);
+      return;
+    }
+
+    if (u_visualMode > 2.5) {
+      float bandIndex = min(floor(uv.x * 7.0), 6.0);
+      float bandLevel = u_subBass;
+      if (bandIndex > 0.5) bandLevel = u_bass;
+      if (bandIndex > 1.5) bandLevel = u_lowMid;
+      if (bandIndex > 2.5) bandLevel = u_mid;
+      if (bandIndex > 3.5) bandLevel = u_highMid;
+      if (bandIndex > 4.5) bandLevel = u_treble;
+      if (bandIndex > 5.5) bandLevel = u_energy;
+      float localX = fract(uv.x * 7.0);
+      float barHeight = 0.08 + bandLevel * 0.82;
+      float bar = smoothstep(0.0, 0.035, localX) * (1.0 - smoothstep(0.86, 0.9, localX));
+      float lit = (1.0 - smoothstep(barHeight - 0.008, barHeight + 0.008, uv.y)) * bar;
+      float cap = exp(-abs(uv.y - barHeight) * 28.0) * bar * (0.15 + bandLevel * 0.75);
+      vec3 bandColor = mix(u_colRibbonSecondary, u_colRibbonPrimary, bandIndex / 6.0);
+      vec3 color = u_colBg + bandColor * (lit * (0.35 + bandLevel * 1.5) + cap);
+      color += u_colSunbeam * exp(-uv.y * 5.0) * 0.025;
+      gl_FragColor = vec4(color, 1.0);
+      return;
+    }
 
     // Time scaling with user flow speed
     float t = u_time * 0.35 * u_ribbonSpeed;

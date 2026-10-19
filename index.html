@@ -52,20 +52,20 @@
         <div class="source-pills">
           <button class="source-pill active" id="sourceSynthBtn" title="Play curated lo-fi sanctuary tapes">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-            Tape Library
+            Sound Library
           </button>
-          <button class="source-pill sync-pill" id="sourceSyncBtn" title="Sync live audio from Spotify, Apple Music, or desktop player">
+          <button class="source-pill sync-pill" id="sourceSyncBtn" title="Capture audio from a browser tab or supported system source">
             <span class="pill-dot-pulse"></span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h5l3 8 4-16 3 8h5"></path></svg>
-            Spotify / Apple Music
+            Capture Audio
           </button>
           <button class="source-pill" id="sourceFileBtn" title="Upload and visualize your own audio file">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-            Custom MP3
+            Audio File
           </button>
           <button class="source-pill" id="sourceMicBtn" title="Listen live to microphone or speaker feed">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
-            Live Mic
+            Microphone
           </button>
         </div>
         <input type="file" id="audioFileInput" accept="audio/*" />
@@ -73,7 +73,7 @@
 
       <!-- Quick Action Buttons (Top-Right Corner) -->
       <nav class="quick-controls" aria-label="Visual controls">
-        <button class="icon-btn" id="btnOpenSync" title="Spotify & Apple Music Sync Hub">
+        <button class="icon-btn" id="btnOpenSync" title="Audio capture settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h5l3 8 4-16 3 8h5"></path></svg>
         </button>
         <button class="icon-btn" id="btnSettings" title="Visual controls & color themes (Press 'S')">
@@ -140,11 +140,29 @@
   <!-- Slide-in Visual Settings Drawer -->
   <aside class="settings-drawer glass-panel" id="settingsDrawer">
     <div class="drawer-header">
-      <span class="drawer-title">Atmosphere & Visuals</span>
+      <span class="drawer-title">Visual Studio</span>
       <button class="drawer-close" id="btnCloseSettings">✕</button>
     </div>
 
     <!-- Color Palettes -->
+    <div>
+      <div class="section-label">Visualizer Style</div>
+      <div class="visual-mode-grid" role="group" aria-label="Visualizer style">
+        <button class="visual-mode-chip active" data-mode="sanctuary" aria-pressed="true">
+          <span class="mode-art mode-art-sanctuary" aria-hidden="true"></span><span class="mode-copy"><strong>Sanctuary</strong><small>Organic ambient</small></span>
+        </button>
+        <button class="visual-mode-chip" data-mode="aurora" aria-pressed="false">
+          <span class="mode-art mode-art-aurora" aria-hidden="true"></span><span class="mode-copy"><strong>Aurora</strong><small>Slow flowing light</small></span>
+        </button>
+        <button class="visual-mode-chip" data-mode="pulse" aria-pressed="false">
+          <span class="mode-art mode-art-pulse" aria-hidden="true"></span><span class="mode-copy"><strong>Pulse</strong><small>Radial sound waves</small></span>
+        </button>
+        <button class="visual-mode-chip" data-mode="spectrum" aria-pressed="false">
+          <span class="mode-art mode-art-spectrum" aria-hidden="true"></span><span class="mode-copy"><strong>Spectrum</strong><small>Seven band display</small></span>
+        </button>
+      </div>
+    </div>
+
     <div>
       <div class="section-label">Color Sanctuary</div>
       <div class="palette-grid">
@@ -217,26 +235,14 @@
     </div>
   </aside>
 
-  <!-- Spotify & Apple Music Sync Sanctuary Modal -->
+  <!-- Audio Capture Modal -->
   <div class="sync-modal-backdrop" id="syncModal">
     <div class="sync-modal-dialog glass-panel">
       <!-- Modal Header -->
       <div class="sync-modal-header">
         <div class="sync-brand-icons">
-          <span class="brand-badge spotify-badge">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.498 17.306c-.216.353-.679.467-1.032.251-2.827-1.728-6.386-2.119-10.577-1.161-.403.092-.806-.157-.898-.56-.093-.404.157-.806.56-.899 4.587-1.048 8.528-.605 11.696 1.336.353.216.467.679.251 1.033zm1.467-3.26c-.272.443-.852.585-1.295.313-3.235-1.988-8.167-2.564-11.994-1.401-.497.151-1.026-.134-1.177-.631-.151-.498.134-1.026.631-1.177 4.379-1.328 9.824-.687 13.522 1.587.443.272.585.852.313 1.295zm.126-3.41c-3.879-2.303-10.279-2.515-13.987-1.388-.593.18-1.224-.155-1.404-.748-.18-.593.155-1.224.748-1.404 4.256-1.292 11.319-1.043 15.795 1.614.533.316.708 1.008.392 1.541-.316.533-1.008.708-1.544.385z"/>
-            </svg>
-            Spotify
-          </span>
-          <span class="brand-divider">+</span>
-          <span class="brand-badge apple-badge">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 0.92-2.85-.9.04-2.02.6-2.66 1.34-.56.64-.99 1.7-0.87 2.73.99.08 2.01-.48 2.61-1.22z"/>
-            </svg>
-            Apple Music
-          </span>
-          <span class="sync-hub-tag">Audio Sync Hub</span>
+          <span class="sync-hub-tag">INPUT SOURCE</span>
+          <span class="sync-modal-title">Capture audio</span>
         </div>
         <button class="drawer-close" id="btnCloseSyncModal" title="Close (Esc)">✕</button>
       </div>
@@ -251,8 +257,8 @@
             <span class="sync-wave-bar"></span>
           </div>
           <div class="sync-status-details">
-            <div class="sync-status-title">High-Definition Audio Stream Synced</div>
-            <div class="sync-status-sub">Visualizer is responding to your Spotify or Apple Music stream in real time</div>
+            <div class="sync-status-title">Audio input connected</div>
+            <div class="sync-status-sub">The visualizer is analyzing audio from the source you selected</div>
           </div>
         </div>
         <button class="btn-disconnect-sync" id="btnDisconnectSync">Disconnect Feed</button>
@@ -265,9 +271,9 @@
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
-            <span id="btnStartAudioSyncText">Start Audio Sync</span>
+            <span id="btnStartAudioSyncText">Capture Audio</span>
           </button>
-          <p class="sync-subtitle">Syncs audio in lossless digital quality directly from your browser tab or desktop application</p>
+          <p class="sync-subtitle">This uses your browser’s audio-capture permission. It does not sign in to or connect a Spotify or Apple Music account.</p>
         </div>
 
         <!-- Visual Step Cards -->
@@ -275,9 +281,9 @@
           <div class="sync-guide-card">
             <div class="sync-guide-header">
               <span class="guide-num">1</span>
-              <span class="guide-title">Web Player (Tab Audio)</span>
+              <span class="guide-title">Music in a browser tab</span>
             </div>
-            <p class="guide-desc">Play in a browser tab. Click <strong>Start Audio Sync</strong>, pick the tab, and verify <strong>"Also share tab audio"</strong> is checked.</p>
+            <p class="guide-desc">Play music in a browser tab, choose <strong>Capture Audio</strong>, then select that tab and enable its audio option. The browser asks you to choose a tab; this site does not connect to the service account.</p>
             <div class="guide-actions">
               <a href="https://open.spotify.com" target="_blank" rel="noopener noreferrer" class="link-btn spotify-link">
                 Open Spotify Web
@@ -291,10 +297,10 @@
           <div class="sync-guide-card">
             <div class="sync-guide-header">
               <span class="guide-num">2</span>
-              <span class="guide-title">Desktop App (System Audio)</span>
+              <span class="guide-title">Music in a desktop app</span>
             </div>
-            <p class="guide-desc">Playing via the desktop app? Select <strong>"Entire Screen"</strong> and check <strong>"Share system audio"</strong> to capture the direct output feed.</p>
-            <div class="guide-badge">Zero Echo • Studio Lossless Digital Stream</div>
+            <p class="guide-desc">Browser support varies. If system audio capture is available, select the offered screen or window and enable audio. You can also use a local audio file or microphone input.</p>
+            <div class="guide-badge">Audio capture only • No account sign-in</div>
           </div>
         </div>
       </div>
@@ -313,18 +319,18 @@
 
       <!-- Now Playing Album Artwork & Metadata Search -->
       <div class="sync-meta-section">
-        <div class="section-label">Now Playing Album Artwork & Information</div>
+        <div class="section-label">Find track artwork</div>
         <div class="sync-search-row">
           <div class="search-input-wrapper">
             <svg class="search-icon" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" id="syncSearchInput" placeholder="Search track or artist to show album art (e.g. Sleepless, Joji, Lofi Fruits)..." />
+            <input type="text" id="syncSearchInput" placeholder="Search the Apple Music catalog by track or artist" />
             <button class="clear-search-btn" id="btnClearSyncSearch" style="display: none;">✕</button>
           </div>
         </div>
         <div class="sync-search-results" id="syncSearchResults"></div>
 
         <!-- Curated Stations -->
-        <div class="preset-stations-label">Or Pick a Curated Chill Station:</div>
+        <div class="preset-stations-label">Curated listening moods</div>
         <div class="preset-station-chips">
           <button class="station-chip" data-title="Lofi Hip Hop Radio" data-artist="Lofi Girl" data-art="https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=300&auto=format&fit=crop&q=80" data-palette="hearth">
             ☕ Lofi Girl (Beats to Study)

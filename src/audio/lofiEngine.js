@@ -12,6 +12,7 @@ export class AudioEngine {
   constructor() {
     this.ctx = null;
     this.analyser = null;
+    this.inputAnalyser = null;
     this.masterGain = null;
     this.ambientGain = null;
     this.musicGain = null;
@@ -39,7 +40,7 @@ export class AudioEngine {
     this.isPlaying = false;
     this.currentTrackIndex = 0;
 
-    // Spotify & Apple Music / Tab & System Audio stream state
+    // Browser tab / system audio capture state
     this.syncStream = null;
     this.syncSourceNode = null;
     this.syncGainNode = null;
@@ -202,6 +203,15 @@ export class AudioEngine {
     this.analyser.smoothingTimeConstant = 0.82;
     this.analyser.minDecibels = -90;
     this.analyser.maxDecibels = -10;
+
+    // External inputs need an analyzer that is not connected to the speakers.
+    // The main analyzer sits in the playback chain, so feeding a mic or captured
+    // tab into it would monitor that input and can cause echo or feedback.
+    this.inputAnalyser = this.ctx.createAnalyser();
+    this.inputAnalyser.fftSize = this.fftSize;
+    this.inputAnalyser.smoothingTimeConstant = 0.82;
+    this.inputAnalyser.minDecibels = -90;
+    this.inputAnalyser.maxDecibels = -10;
 
     // Connect chain:
     // masterGain -> compressor -> masterFilter -> analyser -> destination
@@ -774,9 +784,9 @@ export class AudioEngine {
       this.micGain = this.ctx.createGain();
       this.micGain.gain.setValueAtTime(1.5, this.ctx.currentTime);
 
-      // Note: Connect mic to analyser ONLY (do not loop to destination to prevent howling feedback!)
+      // Analyze mic input without routing it to the playback output.
       this.micSourceNode.connect(this.micGain);
-      this.micGain.connect(this.analyser);
+      this.micGain.connect(this.inputAnalyser);
 
       this.sourceMode = 'mic';
       this.pause(); // Pause synth playback while listening to mic
@@ -809,7 +819,7 @@ export class AudioEngine {
     }
   }
 
-  // Enable live Spotify / Apple Music / Desktop Audio Sync
+  // Capture audio from a selected browser tab or supported system source
   async enableStreamSync() {
     await this.initContext();
 
@@ -830,7 +840,7 @@ export class AudioEngine {
 
     let stream = null;
     try {
-      // Prompt user to select Spotify/Apple Music tab or desktop system audio
+      // Ask the browser which tab or system source should provide audio
       stream = await navigator.mediaDevices.getDisplayMedia({
         video: {
           width: { max: 320 },
@@ -858,7 +868,7 @@ export class AudioEngine {
     if (!audioTracks || audioTracks.length === 0) {
       // Clean up video stream
       stream.getTracks().forEach(t => t.stop());
-      throw new Error('No audio track was selected! When sharing, make sure to check "Also share tab audio" (for Spotify/Apple Music tab) or "Share system audio" (for desktop app).');
+      throw new Error('No audio track was shared. Select a browser tab and enable its audio, or choose a supported system-audio source.');
     }
 
     // Terminate video tracks immediately so zero GPU/CPU/memory overhead is incurred
@@ -869,9 +879,9 @@ export class AudioEngine {
     this.syncGainNode = this.ctx.createGain();
     this.syncGainNode.gain.setValueAtTime(this.syncSensitivity, this.ctx.currentTime);
 
-    // Connect to analyser ONLY - no output destination loopback to prevent echo
+    // Analyze captured audio without routing it back to the playback output.
     this.syncSourceNode.connect(this.syncGainNode);
-    this.syncGainNode.connect(this.analyser);
+    this.syncGainNode.connect(this.inputAnalyser);
 
     this.sourceMode = 'sync';
     this.isPlaying = true;
@@ -1000,13 +1010,16 @@ export class AudioEngine {
   // Calculate decomposed frequency bands from FFT data
   // Using exponential moving averages for soothing, buttery organic motion
   updateAnalysis() {
-    if (!this.analyser || !this.frequencyData) {
+    const analysisNode = (this.sourceMode === 'sync' || this.sourceMode === 'mic')
+      ? this.inputAnalyser
+      : this.analyser;
+    if (!analysisNode || !this.frequencyData) {
       return this.audioData;
     }
 
-    this.analyser.getByteFrequencyData(this.frequencyData);
+    analysisNode.getByteFrequencyData(this.frequencyData);
 
-    const binCount = this.analyser.frequencyBinCount;
+    const binCount = analysisNode.frequencyBinCount;
     // Nyquist is sampleRate / 2 (e.g. 24000Hz). Bin width = Nyquist / binCount ≈ 46.8Hz
     const sampleRate = this.ctx ? this.ctx.sampleRate : 48000;
     const hzPerBin = (sampleRate / 2) / binCount;

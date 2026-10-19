@@ -69,6 +69,7 @@ const fullscreenIcon = document.getElementById('fullscreenIcon');
 
 // Settings controls
 const paletteChips = document.querySelectorAll('.palette-chip');
+const visualModeChips = document.querySelectorAll('.visual-mode-chip');
 const sliderEmber = document.getElementById('sliderEmber');
 const sliderRibbon = document.getElementById('sliderRibbon');
 const sliderSparkle = document.getElementById('sliderSparkle');
@@ -103,14 +104,14 @@ function formatTime(seconds) {
 function updatePlayPauseUI(isPlaying) {
   if (isPlaying) {
     pulseIndicator.classList.remove('paused');
-    trackBadge.textContent = 'PLAYING • GR8 SANCTUARY';
+    trackBadge.textContent = 'PLAYING';
     playPauseIcon.innerHTML = `
       <rect x="6" y="4" width="4" height="16"></rect>
       <rect x="14" y="4" width="4" height="16"></rect>
     `;
   } else {
     pulseIndicator.classList.add('paused');
-    trackBadge.textContent = 'PAUSED • GR8 SANCTUARY';
+    trackBadge.textContent = 'PAUSED';
     playPauseIcon.innerHTML = `<polygon points="5 3 19 12 5 21 5 3"></polygon>`;
   }
 }
@@ -135,19 +136,19 @@ function updateTrackUI(info) {
   if (audio.sourceMode === 'sync') {
     pulseIndicator.classList.remove('paused');
     pulseIndicator.classList.add('synced');
-    trackBadge.textContent = 'SYNCED • GR8 / SPOTIFY / APPLE';
-    timeCurrent.textContent = 'LIVE SYNC';
-    timeDuration.textContent = '0.0 dB / HD';
+    trackBadge.textContent = 'AUDIO CAPTURE';
+    timeCurrent.textContent = 'LIVE';
+    timeDuration.textContent = 'INPUT';
     progressFill.style.width = '100%';
   } else if (info.isLive) {
     pulseIndicator.classList.remove('synced');
-    trackBadge.textContent = 'LIVE AUDIO FEED';
+    trackBadge.textContent = 'MICROPHONE';
     timeCurrent.textContent = 'LIVE';
     timeDuration.textContent = 'REALTIME';
     progressFill.style.width = '100%';
   } else {
     pulseIndicator.classList.remove('synced');
-    trackBadge.textContent = audio.isPlaying ? 'PLAYING • GR8 SANCTUARY' : 'PAUSED • GR8 SANCTUARY';
+    trackBadge.textContent = audio.isPlaying ? 'PLAYING' : 'PAUSED';
   }
 }
 
@@ -234,7 +235,7 @@ function setActiveSourcePill(mode) {
   sourceMicBtn.classList.toggle('active', mode === 'mic');
 }
 
-// Spotify & Apple Music Sync Modal Toggle
+// Audio capture modal toggle
 function toggleSyncModal(open) {
   const shouldOpen = open !== undefined ? open : !syncModal.classList.contains('open');
   syncModal.classList.toggle('open', shouldOpen);
@@ -248,17 +249,17 @@ function updateSyncUIState(isSynced) {
   if (isSynced) {
     syncStatusCard.style.display = 'flex';
     btnStartAudioSync.classList.add('active');
-    btnStartAudioSyncText.textContent = 'Stop Audio Sync';
+    btnStartAudioSyncText.textContent = 'Stop Capture';
     pulseIndicator.classList.add('synced');
   } else {
     syncStatusCard.style.display = 'none';
     btnStartAudioSync.classList.remove('active');
-    btnStartAudioSyncText.textContent = 'Start Audio Sync';
+    btnStartAudioSyncText.textContent = 'Capture Audio';
     pulseIndicator.classList.remove('synced');
   }
 }
 
-// Start or toggle Live Stream Sync (Spotify / Apple Music / Desktop Audio)
+// Start or toggle captured browser-tab / system audio input.
 async function toggleStreamSync() {
   if (audio.sourceMode === 'sync' && audio.syncStream) {
     audio.stopStreamSync();
@@ -359,7 +360,7 @@ sliderSyncGain.addEventListener('input', (e) => {
   labelSyncGainVal.textContent = `${Math.round(val * 100)}%`;
 });
 
-// Apple Music & Spotify Metadata Search (iTunes Public API)
+// Apple Music catalog metadata search (iTunes public search API)
 let searchDebounce = null;
 syncSearchInput.addEventListener('input', (e) => {
   const query = e.target.value.trim();
@@ -373,7 +374,7 @@ syncSearchInput.addEventListener('input', (e) => {
 
   searchDebounce = setTimeout(async () => {
     try {
-      syncSearchResults.innerHTML = `<div style="font-size:0.75rem; color: var(--text-tertiary); padding: 0.5rem;">Searching Apple Music & Spotify catalog...</div>`;
+      syncSearchResults.innerHTML = `<div style="font-size:0.75rem; color: var(--text-tertiary); padding: 0.5rem;">Searching Apple Music catalog...</div>`;
       const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&limit=5&entity=song`);
       if (!res.ok) throw new Error('Search failed');
       const data = await res.json();
@@ -400,7 +401,7 @@ syncSearchInput.addEventListener('input', (e) => {
           audio.setSyncTrackMetadata({
             title: item.trackName,
             artist: item.artistName,
-            tag: item.collectionName || 'Spotify / Apple Music Feed',
+            tag: item.collectionName || 'Apple Music catalog',
             artwork: art
           });
           updateTrackUI(audio.getCurrentTrackInfo());
@@ -529,6 +530,18 @@ paletteChips.forEach((chip) => {
     chip.classList.add('active');
     const paletteId = chip.getAttribute('data-palette');
     visualizer.setPalette(paletteId);
+  });
+});
+
+visualModeChips.forEach((chip) => {
+  chip.addEventListener('click', () => {
+    const mode = chip.getAttribute('data-mode');
+    visualizer.setMode(mode);
+    visualModeChips.forEach((item) => {
+      const selected = item === chip;
+      item.classList.toggle('active', selected);
+      item.setAttribute('aria-pressed', String(selected));
+    });
   });
 });
 

@@ -23,6 +23,8 @@ export class Visualizer {
 
     // Visual configuration parameters
     this.currentPalette = PALETTES.hearth;
+    this.currentMode = 'sanctuary';
+    this.modeValues = { sanctuary: 0, aurora: 1, pulse: 2, spectrum: 3 };
     this.config = {
       emberIntensity: 1.0,
       ribbonSpeed: 1.0,
@@ -110,6 +112,7 @@ export class Visualizer {
       'u_resolution', 'u_time',
       'u_subBass', 'u_bass', 'u_lowMid', 'u_mid', 'u_highMid', 'u_treble', 'u_energy',
       'u_emberIntensity', 'u_ribbonSpeed', 'u_grainAmount',
+      'u_visualMode',
       'u_colBg', 'u_colEmberCore', 'u_colEmberGlow',
       'u_colRibbonPrimary', 'u_colRibbonSecondary', 'u_colSunbeam'
     ];
@@ -162,6 +165,12 @@ export class Visualizer {
       return this.currentPalette;
     }
     return null;
+  }
+
+  setMode(mode) {
+    if (Object.prototype.hasOwnProperty.call(this.modeValues, mode)) {
+      this.currentMode = mode;
+    }
   }
 
   updatePaletteUniforms() {
@@ -226,6 +235,7 @@ export class Visualizer {
       gl.uniform1f(this.uniforms.u_emberIntensity, this.config.emberIntensity);
       gl.uniform1f(this.uniforms.u_ribbonSpeed, this.config.ribbonSpeed);
       gl.uniform1f(this.uniforms.u_grainAmount, this.config.grainAmount);
+      gl.uniform1f(this.uniforms.u_visualMode, this.modeValues[this.currentMode]);
 
       // Draw Quad
       gl.drawArrays(gl.TRIANGLES, 0, 6);
