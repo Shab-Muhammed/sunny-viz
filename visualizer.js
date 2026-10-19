@@ -209,19 +209,29 @@ export class Visualizer {
     this.motionEnergy += ((audioData?.energy || 0) - this.motionEnergy) * smoothFactor;
     this.motionBass += ((audioData?.bass || 0) - this.motionBass) * smoothFactor;
     if (this.traverseEnabled) {
-      this.traverseClock += motionDelta * (0.16 + this.motionEnergy * 0.48 + this.motionBass * 0.18);
+      const wanderingTempo = 0.24 + 0.1 * Math.sin(this.traverseClock * 0.075 + 0.9)
+        + this.motionEnergy * 0.72 + this.motionBass * 0.26;
+      this.traverseClock += motionDelta * wanderingTempo;
     }
 
     const travel = this.traverseClock;
-    const cameraX = 0.055 * Math.sin(travel * 0.24 + Math.sin(travel * 0.071) * 1.4)
-      + 0.022 * Math.sin(travel * 0.53 + 1.7);
-    const cameraY = 0.045 * Math.sin(travel * 0.19 + 2.1 + Math.sin(travel * 0.083) * 1.2)
-      + 0.018 * Math.sin(travel * 0.41);
-    const cameraZoom = 1.14 + 0.025 * Math.sin(travel * 0.17)
-      + this.motionBass * 0.035;
-    const cameraTurn = 0.018 * Math.sin(travel * 0.13 + 0.8)
-      + 0.008 * Math.sin(travel * 0.31);
+    const cameraX = 0.09 * Math.sin(travel * 0.34 + Math.sin(travel * 0.071) * 1.4)
+      + 0.035 * Math.sin(travel * 0.73 + 1.7);
+    // A gentle downward camera path adds a falling-through-the-room feeling;
+    // layered slow waves keep the gaze wandering naturally around the scene.
+    const cameraY = 0.045 + 0.07 * Math.sin(travel * 0.28 + 2.1 + Math.sin(travel * 0.083) * 1.2)
+      + 0.028 * Math.sin(travel * 0.59);
+    const cameraZoom = 1.2 + 0.055 * Math.sin(travel * 0.22)
+      + this.motionEnergy * 0.045 + this.motionBass * 0.05;
+    const cameraTurn = 0.032 * Math.sin(travel * 0.18 + 0.8)
+      + 0.018 * Math.sin(travel * 0.43);
     const cameraBlend = this.traverseAmount;
+    const camera = {
+      x: cameraX * cameraBlend,
+      y: cameraY * cameraBlend,
+      zoom: 1 + (cameraZoom - 1) * cameraBlend,
+      turn: cameraTurn * cameraBlend
+    };
 
     // --- 1. Render WebGL Fluid Canvas ---
     if (this.gl && this.program) {
@@ -233,10 +243,10 @@ export class Visualizer {
       gl.uniform1f(this.uniforms.u_time, elapsedTime);
       gl.uniform4f(
         this.uniforms.u_camera,
-        cameraX * cameraBlend,
-        cameraY * cameraBlend,
-        1 + (cameraZoom - 1) * cameraBlend,
-        cameraTurn * cameraBlend
+        camera.x,
+        camera.y,
+        camera.zoom,
+        camera.turn
       );
 
       // Audio Frequency Bands
@@ -269,7 +279,7 @@ export class Visualizer {
 
     // --- 2. Render Top-Right Dust Motes Canvas ---
     if (this.dustEngine) {
-      this.dustEngine.updateAndRender(audioData, deltaTime);
+      this.dustEngine.updateAndRender(audioData, deltaTime, camera);
     }
   }
 }
