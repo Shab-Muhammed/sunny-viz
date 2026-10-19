@@ -34,10 +34,25 @@ export class AudioEngine {
       peak: 0,
     };
 
-    // Current source mode: 'synth' | 'file' | 'mic'
+    // Current source mode: 'synth' | 'file' | 'mic' | 'sync'
     this.sourceMode = 'synth';
     this.isPlaying = false;
     this.currentTrackIndex = 0;
+
+    // Spotify & Apple Music / Tab & System Audio stream state
+    this.syncStream = null;
+    this.syncSourceNode = null;
+    this.syncGainNode = null;
+    this.syncSensitivity = 1.6;
+    this.syncTrackInfo = {
+      title: 'Spotify / Apple Music Stream',
+      artist: 'Live Desktop & Tab Audio',
+      tag: 'Real-time Music Sync',
+      artwork: null,
+      source: 'sync',
+      isLive: true
+    };
+    this.onSyncEnded = null;
 
     // Custom file audio element
     this.fileAudioElement = new Audio();
@@ -624,6 +639,10 @@ export class AudioEngine {
       } catch (e) {
         console.warn('Playback resume issue:', e);
       }
+    } else if (this.sourceMode === 'sync') {
+      if (this.syncGainNode && this.ctx) {
+        this.syncGainNode.gain.setTargetAtTime(this.syncSensitivity, this.ctx.currentTime, 0.05);
+      }
     }
 
     if (this.onPlayStateChange) {
@@ -642,6 +661,10 @@ export class AudioEngine {
 
     if (this.fileAudioElement) {
       this.fileAudioElement.pause();
+    }
+
+    if (this.sourceMode === 'sync' && this.syncGainNode && this.ctx) {
+      this.syncGainNode.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05);
     }
 
     if (this.onPlayStateChange) {
@@ -709,6 +732,9 @@ export class AudioEngine {
   async loadLocalFile(file) {
     await this.initContext();
 
+    this.stopStreamSync();
+    this.stopMicrophone();
+
     const objectUrl = URL.createObjectURL(file);
     this.fileAudioElement.src = objectUrl;
     this.fileTrackTitle = file.name.replace(/\.[^/.]+$/, '');
@@ -729,6 +755,8 @@ export class AudioEngine {
   // Enable live microphone input
   async enableMicrophone() {
     await this.initContext();
+
+    this.stopStreamSync();
 
     if (this.micStream) {
       // Toggle off mic, return to synth
@@ -781,8 +809,135 @@ export class AudioEngine {
     }
   }
 
+  // Enable live Spotify / Apple Music / Desktop Audio Sync
+  async enableStreamSync() {
+    await this.initContext();
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      throw new Error('Screen, window, and tab audio capture is not supported by this browser. Please use Chrome, Edge, Brave, or Opera on desktop.');
+    }
+
+    // Stop other sources
+    this.stopStreamSync();
+    this.stopMicrophone();
+    if (this.fileAudioElement) {
+      this.fileAudioElement.pause();
+    }
+    if (this.synthSequencerTimer) {
+      clearTimeout(this.synthSequencerTimer);
+      this.synthSequencerTimer = null;
+    }
+
+    let stream = null;
+    try {
+      // Prompt user to select Spotify/Apple Music tab or desktop system audio
+      stream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          width: { max: 320 },
+          height: { max: 240 },
+          frameRate: { max: 5 }
+        },
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          channelCount: 2
+        },
+        systemAudio: 'include',
+        surfaceSwitching: 'include',
+        selfBrowserSurface: 'exclude'
+      });
+    } catch (err) {
+      if (err.name === 'NotAllowedError') {
+        throw new Error('Audio sync sharing was cancelled.');
+      }
+      throw err;
+    }
+
+    const audioTracks = stream.getAudioTracks();
+    if (!audioTracks || audioTracks.length === 0) {
+      // Clean up video stream
+      stream.getTracks().forEach(t => t.stop());
+      throw new Error('No audio track was selected! When sharing, make sure to check "Also share tab audio" (for Spotify/Apple Music tab) or "Share system audio" (for desktop app).');
+    }
+
+    // Terminate video tracks immediately so zero GPU/CPU/memory overhead is incurred
+    stream.getVideoTracks().forEach(t => t.stop());
+
+    this.syncStream = stream;
+    this.syncSourceNode = this.ctx.createMediaStreamSource(this.syncStream);
+    this.syncGainNode = this.ctx.createGain();
+    this.syncGainNode.gain.setValueAtTime(this.syncSensitivity, this.ctx.currentTime);
+
+    // Connect to analyser ONLY - no output destination loopback to prevent echo
+    this.syncSourceNode.connect(this.syncGainNode);
+    this.syncGainNode.connect(this.analyser);
+
+    this.sourceMode = 'sync';
+    this.isPlaying = true;
+
+    // Handle user stopping share via browser notification bar
+    const audioTrack = audioTracks[0];
+    audioTrack.onended = () => {
+      this.stopStreamSync();
+      if (this.onSyncEnded) {
+        this.onSyncEnded();
+      }
+    };
+
+    if (this.onTrackChange) {
+      this.onTrackChange(this.getCurrentTrackInfo());
+    }
+    if (this.onPlayStateChange) {
+      this.onPlayStateChange(true);
+    }
+
+    return true;
+  }
+
+  // Stop live stream sync
+  stopStreamSync() {
+    if (this.syncStream) {
+      this.syncStream.getTracks().forEach(t => t.stop());
+      this.syncStream = null;
+    }
+    if (this.syncSourceNode) {
+      try {
+        this.syncSourceNode.disconnect();
+      } catch (e) {}
+      this.syncSourceNode = null;
+    }
+    if (this.syncGainNode) {
+      try {
+        this.syncGainNode.disconnect();
+      } catch (e) {}
+      this.syncGainNode = null;
+    }
+  }
+
+  // Set stream sync input sensitivity (0.2x to 4.0x)
+  setSyncSensitivity(multiplier) {
+    this.syncSensitivity = Math.max(0.2, Math.min(4.0, multiplier));
+    if (this.syncGainNode && this.ctx) {
+      this.syncGainNode.gain.setTargetAtTime(this.syncSensitivity, this.ctx.currentTime, 0.05);
+    }
+  }
+
+  // Update track title, artist, and album artwork for sync mode
+  setSyncTrackMetadata(info) {
+    this.syncTrackInfo = {
+      ...this.syncTrackInfo,
+      ...info,
+      isLive: true
+    };
+    if (this.sourceMode === 'sync' && this.onTrackChange) {
+      this.onTrackChange(this.getCurrentTrackInfo());
+    }
+  }
+
   // Switch back to built-in sanctuary synth
   switchToSynth() {
+    this.stopStreamSync();
     this.stopMicrophone();
     if (this.fileAudioElement) {
       this.fileAudioElement.pause();
@@ -796,11 +951,25 @@ export class AudioEngine {
 
   // Current track information object
   getCurrentTrackInfo() {
+    if (this.sourceMode === 'sync') {
+      return {
+        title: this.syncTrackInfo.title || 'Spotify / Apple Music Stream',
+        artist: this.syncTrackInfo.artist || 'Live Audio Feed',
+        tag: this.syncTrackInfo.tag || 'HD Real-Time Stream Sync',
+        artwork: this.syncTrackInfo.artwork || null,
+        paletteHint: this.syncTrackInfo.paletteHint || null,
+        source: 'sync',
+        isLive: true
+      };
+    }
+
     if (this.sourceMode === 'mic') {
       return {
         title: 'Live Audio Input',
         artist: 'Microphone / Room Feed',
         tag: 'Real-time Sound Reactive',
+        artwork: null,
+        source: 'mic',
         isLive: true
       };
     }
@@ -810,6 +979,8 @@ export class AudioEngine {
         title: this.fileTrackTitle || 'Uploaded Track',
         artist: 'Local Audio Library',
         tag: 'Custom Audio Stream',
+        artwork: null,
+        source: 'file',
         isLive: false
       };
     }
@@ -820,6 +991,8 @@ export class AudioEngine {
       artist: track.artist,
       tag: `${track.tag} • ${track.bpm} BPM`,
       key: track.key,
+      artwork: null,
+      source: 'synth',
       isLive: false
     };
   }

@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <!-- Background Slate/Graphite Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14161c"/>
+      <stop offset="50%" stop-color="#0b0c10"/>
+      <stop offset="100%" stop-color="#050608"/>
+    </linearGradient>
+
+    <!-- Incandescent Amber/Gold Border Gradient -->
+    <linearGradient id="borderGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f39c56" stop-opacity="0.9"/>
+      <stop offset="45%" stop-color="#ffbe76" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#4ecdc4" stop-opacity="0.4"/>
+    </linearGradient>
+
+    <!-- Warm Ember Glow (Lower Left) -->
+    <radialGradient id="emberGlow" cx="20%" cy="80%" r="65%">
+      <stop offset="0%" stop-color="#ff7a29" stop-opacity="0.45"/>
+      <stop offset="50%" stop-color="#f39c56" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Solar Dust Ray Glow (Top Right) -->
+    <radialGradient id="sunGlow" cx="80%" cy="20%" r="55%">
+      <stop offset="0%" stop-color="#ffebaa" stop-opacity="0.3"/>
+      <stop offset="60%" stop-color="#ffbe76" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Text & Glyph Gradient: Luminous Gold to Peach -->
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="30%" stop-color="#ffdfa9"/>
+      <stop offset="70%" stop-color="#ffbe76"/>
+      <stop offset="100%" stop-color="#f39c56"/>
+    </linearGradient>
+
+    <!-- 8 / Infinity Reel Gradient -->
+    <linearGradient id="eightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffeed0"/>
+      <stop offset="35%" stop-color="#ffbe76"/>
+      <stop offset="75%" stop-color="#f39c56"/>
+      <stop offset="100%" stop-color="#e17055"/>
+    </linearGradient>
+
+    <!-- Subtle Drop Shadow Filter for Tab Readability -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.8" flood-color="#000000" flood-opacity="0.75"/>
+    </filter>
+    
+    <!-- Ambient Pulse Glow Filter -->
+    <filter id="amberAura" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Squircle Base Frame -->
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#bgGrad)"/>
+  
+  <!-- Ambient Atmospheric Lighting inside Favicon -->
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#emberGlow)"/>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#sunGlow)"/>
+  
+  <!-- Delicate Outer Border with Subtle Glow -->
+  <rect x="2.5" y="2.5" width="59" height="59" rx="14.5" fill="none" stroke="url(#borderGrad)" stroke-width="1.8"/>
+
+  <!-- Audio Waveform Scintillation Dots (Top-Right Treble Dust) -->
+  <circle cx="50" cy="12" r="1.2" fill="#fff" opacity="0.8"/>
+  <circle cx="54" cy="16" r="0.8" fill="#ffbe76" opacity="0.6"/>
+  <circle cx="45" cy="10" r="0.9" fill="#ffbe76" opacity="0.7"/>
+
+  <!-- Main "gr8" Wordplay Geometry (great = gr8 + infinity loop + audio tape reels) -->
+  <g filter="url(#shadow)">
+    <!-- Letter 'g' (Fluid, Geometric, Bold) -->
+    <path d="M 12 28
+             C 12 23.5, 15.5 20.5, 20.5 20.5
+             C 25 20.5, 28 23.5, 28 27.5
+             L 28 37.5
+             C 28 42.5, 24.5 45, 18.5 45
+             C 14 45, 12 43.5, 11 41.5
+             L 14.5 39.5
+             C 15.3 40.8, 16.6 41.6, 18.5 41.6
+             C 22 41.6, 23.8 39.8, 23.8 36.8
+             L 23.8 35.2
+             C 22.8 36.6, 21.2 37.4, 19.4 37.4
+             C 14.8 37.4, 12 33.8, 12 28 Z
+             M 23.8 28.5
+             L 23.8 27.5
+             C 23.8 25, 22.2 23.6, 20 23.6
+             C 17.5 23.6, 16 25.2, 16 28.5
+             C 16 31.8, 17.5 33.8, 20 33.8
+             C 22.2 33.8, 23.8 32, 23.8 28.5 Z"
+          fill="url(#textGrad)"/>
+
+    <!-- Letter 'r' (Compact, Dynamic Shoulder) -->
+    <path d="M 31 23
+             L 34.8 23
+             L 34.8 26.2
+             C 35.8 24.2, 37.5 22.8, 39.8 22.8
+             C 40.6 22.8, 41.2 23, 41.8 23.4
+             L 40.4 27.2
+             C 39.8 26.9, 39.2 26.7, 38.4 26.7
+             C 36.5 26.7, 35 28.2, 35 31
+             L 35 41
+             L 31 41 Z"
+          fill="url(#textGrad)"/>
+
+    <!-- Digit '8' (Infinity Loop & Dual Audio Tape Spools / Speakers) -->
+    <!-- Ambient back-glow on the 8 -->
+    <g filter="url(#amberAura)">
+      <!-- Top Loop -->
+      <path d="M 50.5 19.5
+               C 54.5 19.5, 57.5 22.2, 57.5 25.8
+               C 57.5 28.5, 55.8 30.5, 53.5 31.5
+               C 56.4 32.6, 58.5 35, 58.5 38.5
+               C 58.5 43, 54.8 46.2, 49.5 46.2
+               C 44.5 46.2, 41 43.2, 41 38.6
+               C 41 35.2, 43 32.7, 45.8 31.6
+               C 43.8 30.5, 42.5 28.5, 42.5 25.8
+               C 42.5 22.2, 45.8 19.5, 50.5 19.5 Z
+               M 50.2 23.2
+               C 48 23.2, 46.3 24.5, 46.3 26.4
+               C 46.3 28.3, 48 29.8, 50.2 29.8
+               C 52.5 29.8, 54 28.3, 54 26.4
+               C 54 24.5, 52.5 23.2, 50.2 23.2 Z
+               M 49.8 33.2
+               C 46.8 33.2, 44.8 35.2, 44.8 38.2
+               C 44.8 41.2, 46.8 42.8, 49.8 42.8
+               C 53 42.8, 54.8 41.2, 54.8 38.2
+               C 54.8 35.2, 53 33.2, 49.8 33.2 Z"
+            fill="url(#eightGrad)"/>
+    </g>
+
+    <!-- Tape Spool Center Embers inside the '8' (Double sound drivers) -->
+    <circle cx="50.2" cy="26.4" r="1.3" fill="#ffffff" opacity="0.95"/>
+    <circle cx="49.8" cy="38.2" r="1.6" fill="#ffffff" opacity="0.95"/>
+  </g>
+
+  <!-- Bottom Frequency Horizon / Tape Connector Line -->
+  <path d="M 14 51 Q 28 49 38 52 T 56 50" fill="none" stroke="url(#borderGrad)" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+  <!-- Mini Audio Peak Notch in Horizon -->
+  <circle cx="28" cy="49" r="1" fill="#f39c56"/>
+  <circle cx="46" cy="51.5" r="1.2" fill="#ffbe76"/>
+</svg>

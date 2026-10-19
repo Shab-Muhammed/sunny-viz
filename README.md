@@ -28,6 +28,12 @@ Audio input is decomposed in real-time via an `AnalyserNode` (FFT size: 1024, sm
 ## Core Capabilities
 
 ### Audio Signal Sources
+- **Spotify & Apple Music Audio Sync (Direct HD Digital Feed)**:
+  - Real-time digital PCM audio capture via `navigator.mediaDevices.getDisplayMedia` from any Spotify or Apple Music tab or desktop application with zero background mic noise or audio latency.
+  - Video track is terminated instantaneously upon stream acquisition to preserve 100% GPU/CPU power for WebGL fluid rendering.
+  - Interactive **Audio Sync Hub** dialog providing 1-click launch guides, quick web player launchers, and input sensitivity gain boost (50% to 350%) with real-time level meters.
+  - Dynamic **Album Artwork & Metadata Integration**: Live track search across Apple Music & Spotify catalogs, rendering high-resolution album covers with reactive ambient halo glows matching the artwork.
+  - Curated lo-fi preset station chips (*Lofi Girl*, *Chillhop Essentials*, *Sakura Garden*, *Nordic Pine*, *Midnight Jazz*).
 - **Procedural Synthesizer**: Four built-in, polyphonic compositions generated through Web Audio oscillators, biquad filter envelopes, sub-bass synthesis, and simulated tape flutter:
   - Tape 01: *Midnight Rain & Warm Tea* (72 BPM, Eb Major)
   - Tape 02: *Autumn Window Mist* (66 BPM, Ab Major)
@@ -56,11 +62,13 @@ Audio input is decomposed in real-time via an `AnalyserNode` (FFT size: 1024, sm
 | Key | Function |
 | :--- | :--- |
 | `Space` | Toggle playback (play / pause) |
+| `Y` | Open Spotify & Apple Music Sync Hub |
 | `F` | Toggle browser fullscreen mode |
 | `H` | Toggle cinema mode (hide / show interface controls) |
 | `S` | Toggle atmosphere and visual settings panel |
 | `N` | Advance to the next built-in composition |
 | `M` | Mute / unmute audio output |
+| `Esc` | Close sync hub or visual settings panel |
 
 ---
 

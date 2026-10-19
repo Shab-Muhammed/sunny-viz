@@ -19,10 +19,30 @@ const pulseIndicator = document.getElementById('pulseIndicator');
 const trackBadge = document.getElementById('trackBadge');
 const trackTitle = document.getElementById('trackTitle');
 const trackMeta = document.getElementById('trackMeta');
+const trackArtworkThumb = document.getElementById('trackArtworkThumb');
+const trackArtworkImg = document.getElementById('trackArtworkImg');
+const trackArtworkGlow = document.getElementById('trackArtworkGlow');
 const sourceSynthBtn = document.getElementById('sourceSynthBtn');
+const sourceSyncBtn = document.getElementById('sourceSyncBtn');
 const sourceFileBtn = document.getElementById('sourceFileBtn');
 const sourceMicBtn = document.getElementById('sourceMicBtn');
 const audioFileInput = document.getElementById('audioFileInput');
+
+// Sync Modal Elements
+const syncModal = document.getElementById('syncModal');
+const btnOpenSync = document.getElementById('btnOpenSync');
+const btnCloseSyncModal = document.getElementById('btnCloseSyncModal');
+const btnStartAudioSync = document.getElementById('btnStartAudioSync');
+const btnStartAudioSyncText = document.getElementById('btnStartAudioSyncText');
+const syncStatusCard = document.getElementById('syncStatusCard');
+const btnDisconnectSync = document.getElementById('btnDisconnectSync');
+const sliderSyncGain = document.getElementById('sliderSyncGain');
+const labelSyncGainVal = document.getElementById('labelSyncGainVal');
+const syncGainMeterFill = document.getElementById('syncGainMeterFill');
+const syncSearchInput = document.getElementById('syncSearchInput');
+const btnClearSyncSearch = document.getElementById('btnClearSyncSearch');
+const syncSearchResults = document.getElementById('syncSearchResults');
+const stationChips = document.querySelectorAll('.station-chip');
 
 // Scrubber elements
 const btnPlayPause = document.getElementById('btnPlayPause');
@@ -83,14 +103,14 @@ function formatTime(seconds) {
 function updatePlayPauseUI(isPlaying) {
   if (isPlaying) {
     pulseIndicator.classList.remove('paused');
-    trackBadge.textContent = 'PLAYING • LO-FI SANCTUARY';
+    trackBadge.textContent = 'PLAYING • GR8 SANCTUARY';
     playPauseIcon.innerHTML = `
       <rect x="6" y="4" width="4" height="16"></rect>
       <rect x="14" y="4" width="4" height="16"></rect>
     `;
   } else {
     pulseIndicator.classList.add('paused');
-    trackBadge.textContent = 'PAUSED • LO-FI SANCTUARY';
+    trackBadge.textContent = 'PAUSED • GR8 SANCTUARY';
     playPauseIcon.innerHTML = `<polygon points="5 3 19 12 5 21 5 3"></polygon>`;
   }
 }
@@ -101,11 +121,33 @@ function updateTrackUI(info) {
   trackTitle.textContent = info.title;
   trackMeta.textContent = info.tag ? `${info.artist} • ${info.tag}` : info.artist;
 
-  if (info.isLive) {
+  // Handle album artwork display
+  if (info.artwork) {
+    trackArtworkThumb.style.display = 'block';
+    trackArtworkImg.src = info.artwork;
+    if (visualizer && visualizer.currentPalette && visualizer.currentPalette.accent) {
+      trackArtworkGlow.style.background = `radial-gradient(circle, ${visualizer.currentPalette.accent} 0%, transparent 70%)`;
+    }
+  } else {
+    trackArtworkThumb.style.display = 'none';
+  }
+
+  if (audio.sourceMode === 'sync') {
+    pulseIndicator.classList.remove('paused');
+    pulseIndicator.classList.add('synced');
+    trackBadge.textContent = 'SYNCED • GR8 / SPOTIFY / APPLE';
+    timeCurrent.textContent = 'LIVE SYNC';
+    timeDuration.textContent = '0.0 dB / HD';
+    progressFill.style.width = '100%';
+  } else if (info.isLive) {
+    pulseIndicator.classList.remove('synced');
     trackBadge.textContent = 'LIVE AUDIO FEED';
     timeCurrent.textContent = 'LIVE';
     timeDuration.textContent = 'REALTIME';
     progressFill.style.width = '100%';
+  } else {
+    pulseIndicator.classList.remove('synced');
+    trackBadge.textContent = audio.isPlaying ? 'PLAYING • GR8 SANCTUARY' : 'PAUSED • GR8 SANCTUARY';
   }
 }
 
@@ -119,7 +161,7 @@ audio.onTrackChange = (info) => {
 };
 
 audio.onTimeUpdate = (currentTime, duration) => {
-  if (isDraggingScrubber || audio.sourceMode === 'mic') return;
+  if (isDraggingScrubber || audio.sourceMode === 'mic' || audio.sourceMode === 'sync') return;
 
   timeCurrent.textContent = formatTime(currentTime);
   timeDuration.textContent = formatTime(duration);
@@ -184,12 +226,109 @@ window.addEventListener('mouseup', () => {
   isDraggingScrubber = false;
 });
 
-// Audio Source Selection Pills
-sourceSynthBtn.addEventListener('click', () => {
-  sourceSynthBtn.classList.add('active');
-  sourceFileBtn.classList.remove('active');
-  sourceMicBtn.classList.remove('active');
+// Helper: Set Active Source Pill
+function setActiveSourcePill(mode) {
+  sourceSynthBtn.classList.toggle('active', mode === 'synth');
+  sourceSyncBtn.classList.toggle('active', mode === 'sync');
+  sourceFileBtn.classList.toggle('active', mode === 'file');
+  sourceMicBtn.classList.toggle('active', mode === 'mic');
+}
+
+// Spotify & Apple Music Sync Modal Toggle
+function toggleSyncModal(open) {
+  const shouldOpen = open !== undefined ? open : !syncModal.classList.contains('open');
+  syncModal.classList.toggle('open', shouldOpen);
+  if (shouldOpen) {
+    toggleSettings(false);
+  }
+}
+
+// Update Sync Modal Status UI
+function updateSyncUIState(isSynced) {
+  if (isSynced) {
+    syncStatusCard.style.display = 'flex';
+    btnStartAudioSync.classList.add('active');
+    btnStartAudioSyncText.textContent = 'Stop Audio Sync';
+    pulseIndicator.classList.add('synced');
+  } else {
+    syncStatusCard.style.display = 'none';
+    btnStartAudioSync.classList.remove('active');
+    btnStartAudioSyncText.textContent = 'Start Audio Sync';
+    pulseIndicator.classList.remove('synced');
+  }
+}
+
+// Start or toggle Live Stream Sync (Spotify / Apple Music / Desktop Audio)
+async function toggleStreamSync() {
+  if (audio.sourceMode === 'sync' && audio.syncStream) {
+    audio.stopStreamSync();
+    audio.switchToSynth();
+    setActiveSourcePill('synth');
+    updateSyncUIState(false);
+    return;
+  }
+
+  try {
+    btnStartAudioSync.disabled = true;
+    btnStartAudioSyncText.textContent = 'Select Window / Tab...';
+
+    if (!hasStarted) {
+      welcomeOverlay.classList.add('dissolved');
+      hasStarted = true;
+    }
+
+    const ok = await audio.enableStreamSync();
+    if (ok) {
+      setActiveSourcePill('sync');
+      updateSyncUIState(true);
+      setTimeout(() => {
+        toggleSyncModal(false);
+      }, 700);
+    }
+  } catch (err) {
+    console.warn('Sync failed or cancelled:', err);
+    alert(err.message || 'Audio sync failed.');
+    setActiveSourcePill(audio.sourceMode);
+    updateSyncUIState(false);
+  } finally {
+    btnStartAudioSync.disabled = false;
+  }
+}
+
+// Stream ended callback (e.g. user clicked browser's "Stop sharing")
+audio.onSyncEnded = () => {
+  updateSyncUIState(false);
+  setActiveSourcePill('synth');
   audio.switchToSynth();
+};
+
+// Source Selection Pills wiring
+sourceSynthBtn.addEventListener('click', () => {
+  setActiveSourcePill('synth');
+  audio.switchToSynth();
+});
+
+sourceSyncBtn.addEventListener('click', () => {
+  toggleSyncModal(true);
+});
+
+btnOpenSync.addEventListener('click', () => {
+  toggleSyncModal();
+});
+
+btnCloseSyncModal.addEventListener('click', () => {
+  toggleSyncModal(false);
+});
+
+btnStartAudioSync.addEventListener('click', () => {
+  toggleStreamSync();
+});
+
+btnDisconnectSync.addEventListener('click', () => {
+  audio.stopStreamSync();
+  audio.switchToSynth();
+  setActiveSourcePill('synth');
+  updateSyncUIState(false);
 });
 
 sourceFileBtn.addEventListener('click', () => {
@@ -199,9 +338,7 @@ sourceFileBtn.addEventListener('click', () => {
 audioFileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (file) {
-    sourceSynthBtn.classList.remove('active');
-    sourceFileBtn.classList.add('active');
-    sourceMicBtn.classList.remove('active');
+    setActiveSourcePill('file');
     audio.loadLocalFile(file);
   }
 });
@@ -209,13 +346,107 @@ audioFileInput.addEventListener('change', (e) => {
 sourceMicBtn.addEventListener('click', async () => {
   const active = await audio.enableMicrophone();
   if (active) {
-    sourceSynthBtn.classList.remove('active');
-    sourceFileBtn.classList.remove('active');
-    sourceMicBtn.classList.add('active');
+    setActiveSourcePill('mic');
   } else {
-    sourceSynthBtn.classList.add('active');
-    sourceMicBtn.classList.remove('active');
+    setActiveSourcePill('synth');
   }
+});
+
+// Sync Sensitivity Boost Slider
+sliderSyncGain.addEventListener('input', (e) => {
+  const val = parseFloat(e.target.value);
+  audio.setSyncSensitivity(val);
+  labelSyncGainVal.textContent = `${Math.round(val * 100)}%`;
+});
+
+// Apple Music & Spotify Metadata Search (iTunes Public API)
+let searchDebounce = null;
+syncSearchInput.addEventListener('input', (e) => {
+  const query = e.target.value.trim();
+  btnClearSyncSearch.style.display = query ? 'block' : 'none';
+
+  clearTimeout(searchDebounce);
+  if (!query) {
+    syncSearchResults.innerHTML = '';
+    return;
+  }
+
+  searchDebounce = setTimeout(async () => {
+    try {
+      syncSearchResults.innerHTML = `<div style="font-size:0.75rem; color: var(--text-tertiary); padding: 0.5rem;">Searching Apple Music & Spotify catalog...</div>`;
+      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&limit=5&entity=song`);
+      if (!res.ok) throw new Error('Search failed');
+      const data = await res.json();
+
+      if (!data.results || data.results.length === 0) {
+        syncSearchResults.innerHTML = `<div style="font-size:0.75rem; color: var(--text-tertiary); padding: 0.5rem;">No tracks found for "${query}"</div>`;
+        return;
+      }
+
+      syncSearchResults.innerHTML = '';
+      data.results.forEach((item) => {
+        const card = document.createElement('div');
+        card.className = 'search-result-card';
+        const art = item.artworkUrl100 ? item.artworkUrl100.replace('100x100bb', '300x300bb') : '';
+        card.innerHTML = `
+          <img class="result-art" src="${art || ''}" alt="Cover" />
+          <div class="result-info">
+            <div class="result-title">${item.trackName || 'Unknown Title'}</div>
+            <div class="result-artist">${item.artistName || 'Unknown Artist'} • ${item.collectionName || ''}</div>
+          </div>
+          <span class="result-badge">Apply</span>
+        `;
+        card.addEventListener('click', () => {
+          audio.setSyncTrackMetadata({
+            title: item.trackName,
+            artist: item.artistName,
+            tag: item.collectionName || 'Spotify / Apple Music Feed',
+            artwork: art
+          });
+          updateTrackUI(audio.getCurrentTrackInfo());
+        });
+        syncSearchResults.appendChild(card);
+      });
+    } catch (err) {
+      console.warn('Metadata search error:', err);
+      syncSearchResults.innerHTML = `<div style="font-size:0.75rem; color: var(--text-tertiary); padding: 0.5rem;">Could not load search results. You can still stream directly!</div>`;
+    }
+  }, 350);
+});
+
+btnClearSyncSearch.addEventListener('click', () => {
+  syncSearchInput.value = '';
+  btnClearSyncSearch.style.display = 'none';
+  syncSearchResults.innerHTML = '';
+});
+
+// Curated Station Preset Chips
+stationChips.forEach((chip) => {
+  chip.addEventListener('click', () => {
+    stationChips.forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+
+    const title = chip.getAttribute('data-title');
+    const artist = chip.getAttribute('data-artist');
+    const artwork = chip.getAttribute('data-art');
+    const paletteId = chip.getAttribute('data-palette');
+
+    if (paletteId && visualizer) {
+      visualizer.setPalette(paletteId);
+      paletteChips.forEach(p => {
+        p.classList.toggle('active', p.getAttribute('data-palette') === paletteId);
+      });
+    }
+
+    audio.setSyncTrackMetadata({
+      title,
+      artist,
+      tag: 'Curated Sync Stream',
+      artwork,
+      paletteHint: paletteId
+    });
+    updateTrackUI(audio.getCurrentTrackInfo());
+  });
 });
 
 // Ambient Layers: Rain & Vinyl
@@ -413,6 +644,11 @@ window.addEventListener('keydown', (e) => {
     toggleCinemaMode();
   } else if (e.key === 's' || e.key === 'S') {
     toggleSettings();
+  } else if (e.key === 'y' || e.key === 'Y') {
+    toggleSyncModal();
+  } else if (e.key === 'Escape') {
+    toggleSyncModal(false);
+    toggleSettings(false);
   } else if (e.key === 'm' || e.key === 'M') {
     btnMute.click();
   } else if (e.key === 'n' || e.key === 'N') {
@@ -454,6 +690,13 @@ window.addEventListener('drop', (e) => {
 function animationLoop() {
   const audioData = audio.updateAnalysis();
   visualizer.render(audioData);
+
+  // Update live audio meter in sync modal if open or syncing
+  if (syncModal.classList.contains('open') || audio.sourceMode === 'sync') {
+    const meterVal = Math.min(100, Math.round(audioData.energy * 100 * audio.syncSensitivity * 1.5));
+    syncGainMeterFill.style.width = `${meterVal}%`;
+  }
+
   requestAnimationFrame(animationLoop);
 }
 
