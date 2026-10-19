@@ -144,25 +144,15 @@
       <button class="drawer-close" id="btnCloseSettings">✕</button>
     </div>
 
-    <!-- Color Palettes -->
-    <div>
-      <div class="section-label">Visualizer Style</div>
-      <div class="visual-mode-grid" role="group" aria-label="Visualizer style">
-        <button class="visual-mode-chip active" data-mode="sanctuary" aria-pressed="true">
-          <span class="mode-art mode-art-sanctuary" aria-hidden="true"></span><span class="mode-copy"><strong>Sanctuary</strong><small>Organic ambient</small></span>
-        </button>
-        <button class="visual-mode-chip" data-mode="aurora" aria-pressed="false">
-          <span class="mode-art mode-art-aurora" aria-hidden="true"></span><span class="mode-copy"><strong>Aurora</strong><small>Slow flowing light</small></span>
-        </button>
-        <button class="visual-mode-chip" data-mode="pulse" aria-pressed="false">
-          <span class="mode-art mode-art-pulse" aria-hidden="true"></span><span class="mode-copy"><strong>Pulse</strong><small>Radial sound waves</small></span>
-        </button>
-        <button class="visual-mode-chip" data-mode="spectrum" aria-pressed="false">
-          <span class="mode-art mode-art-spectrum" aria-hidden="true"></span><span class="mode-copy"><strong>Spectrum</strong><small>Seven band display</small></span>
-        </button>
-      </div>
+    <div class="traverse-section">
+      <div class="section-label">Scene Motion</div>
+      <button class="traverse-toggle" id="btnSanctuaryTraverse" type="button" aria-pressed="false">
+        <span class="traverse-toggle-copy"><strong>Sanctuary Traverse</strong><small>Drift through the scene with the music</small></span>
+        <span class="traverse-toggle-state">OFF</span>
+      </button>
     </div>
 
+    <!-- Color Palettes -->
     <div>
       <div class="section-label">Color Sanctuary</div>
       <div class="palette-grid">
